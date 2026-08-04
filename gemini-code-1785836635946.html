@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="th">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สื่อผลงาน Easy Media - โรงเรียนบ้านหนองขุย</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <!-- เพิ่ม SweetAlert2 สำหรับหน้าต่างแจ้งเตือนที่สวยงาม -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+      body { font-family: 'Anuphan', sans-serif; }
+      .tab-active { background-color: #4f46e5; color: white; }
+      .cat-active { background-color: #06b6d4; color: white; }
+      .nav-active { background-color: #e0e7ff; color: #4f46e5; font-weight: 700; border-left: 4px solid #4f46e5; }
+      .padlet-board::-webkit-scrollbar { height: 10px; }
+      .padlet-board::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+      .padlet-board::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      .padlet-board::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+ </head>
+ <body class="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row h-screen overflow-hidden">
+  
+  <!-- Sidebar Menu -->
+  <aside class="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-slate-200 flex flex-col flex-shrink-0 z-50">
+    <div class="p-5 border-b border-slate-100">
+      <h1 class="font-bold text-xl text-indigo-600 flex items-center gap-2">
+        <i data-lucide="layout-dashboard" class="text-indigo-500"></i> สื่อผลงาน Easy Media
+      </h1>
+      <p class="text-[11px] text-slate-400 font-medium mt-0.5">โรงเรียนบ้านหนองขุย</p>
+    </div>
+    
+    <nav class="flex-grow p-4 flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible whitespace-nowrap md:whitespace-normal">
+      <button onclick="changeMenu('board')" id="menu-board" class="nav-active w-full text-left px-4 py-3 rounded-xl flex items-center gap-2.5 text-sm transition-all">
+        <i data-lucide="kanban-square" class="w-4 h-4"></i> 1. หน้าหลัก
+      </button>
+      <button onclick="changeMenu('submit')" id="menu-submit" class="w-full text-left px-4 py-3 text-slate-600 rounded-xl flex items-center gap-2.5 text-sm transition-all hover:bg-slate-50">
+        <i data-lucide="upload-cloud" class="w-4 h-4"></i> 2. ส่งงาน
+      </button>
+      <button onclick="changeMenu('overview')" id="menu-overview" class="w-full text-left px-4 py-3 text-slate-600 rounded-xl flex items-center gap-2.5 text-sm transition-all hover:bg-slate-50">
+        <i data-lucide="pie-chart" class="w-4 h-4"></i> 3. ภาพรวมส่งงาน
+      </button>
+      <button onclick="changeMenu('grading')" id="menu-grading" class="w-full text-left px-4 py-3 text-slate-600 rounded-xl flex items-center gap-2.5 text-sm transition-all hover:bg-slate-50">
+        <i data-lucide="check-square" class="w-4 h-4"></i> 4. ตรวจงาน (Admin)
+      </button>
+      <button onclick="changeMenu('summary')" id="menu-summary" class="w-full text-left px-4 py-3 text-slate-600 rounded-xl flex items-center gap-2.5 text-sm transition-all hover:bg-slate-50">
+        <i data-lucide="award" class="w-4 h-4"></i> 5. สรุปคะแนน
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="flex-grow flex flex-col overflow-hidden h-full">
+    
+    <!-- View 1: Board -->
+    <div id="view-board" class="flex flex-col h-full w-full overflow-hidden">
+      <div class="px-6 pt-4 flex flex-col gap-3 flex-shrink-0">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex gap-1.5 max-w-xl">
+            <button onclick="switchPart('PART1')" id="tab-PART1" class="tab-active py-1.5 px-4 rounded-lg text-xs font-bold transition-all">PART 1</button>
+            <button onclick="switchPart('PART2')" id="tab-PART2" class="py-1.5 px-4 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">PART 2</button>
+            <button onclick="switchPart('PART3')" id="tab-PART3" class="py-1.5 px-4 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">PART 3</button>
+            <button onclick="switchPart('PART4')" id="tab-PART4" class="py-1.5 px-4 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200">PART 4</button>
+          </div>
+          <button onclick="loadDataFromServer()" class="text-xs text-indigo-600 font-medium bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 flex items-center gap-1"><i data-lucide="refresh-cw" class="w-3 h-3"></i> ดึงข้อมูลล่าสุด</button>
+        </div>
+
+        <div class="flex items-center gap-2 bg-slate-200/50 p-1.5 rounded-xl border overflow-x-auto padlet-board">
+          <button onclick="filterCategory('ALL')" id="cat-ALL" class="cat-active px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap">ทั้งหมด</button>
+          <button onclick="filterCategory('แผนการสอน รูปแบบ BAL')" id="cat-agreement" class="px-3 py-1 rounded-lg text-xs font-medium bg-white text-slate-600 whitespace-nowrap">แผนการสอน รูปแบบ BAL</button>
+          <button onclick="filterCategory('VDO Clip & สื่อการสอน')" id="cat-prediction" class="px-3 py-1 rounded-lg text-xs font-medium bg-white text-slate-600 whitespace-nowrap">VDO Clip & สื่อการสอน</button>
+          <button onclick="filterCategory('Interactive Games')" id="cat-plot" class="px-3 py-1 rounded-lg text-xs font-medium bg-white text-slate-600 whitespace-nowrap">Interactive Games</button>
+          <button onclick="filterCategory('สรุปผลการนำสื่อไปใช้')" id="cat-vocab" class="px-3 py-1 rounded-lg text-xs font-medium bg-white text-slate-600 whitespace-nowrap">สรุปผลการนำสื่อไปใช้</button>
+        </div>
+      </div>
+
+      <main id="board-canvas" class="w-full px-6 pb-6 pt-3 flex overflow-x-auto gap-5 items-start padlet-board flex-grow h-full snap-x">
+        <div id="col-agreement" class="flex flex-col gap-3 bg-slate-200/40 p-3 rounded-2xl min-w-[260px] max-w-[260px] snap-start border"><h2 class="font-bold text-center py-1.5 rounded-xl bg-purple-600 text-white text-xs shadow-sm">แผนการสอน รูปแบบ BAL</h2><div id="container-agreement" class="flex flex-col gap-3 overflow-y-auto pb-10 border-0"></div></div>
+        <div id="col-prediction" class="flex flex-col gap-3 bg-slate-200/40 p-3 rounded-2xl min-w-[260px] max-w-[260px] snap-start border"><h2 class="font-bold text-center py-1.5 rounded-xl bg-blue-600 text-white text-xs shadow-sm">VDO Clip & สื่อการสอน</h2><div id="container-prediction" class="flex flex-col gap-3 overflow-y-auto pb-10 border-0"></div></div>
+        <div id="col-plot" class="flex flex-col gap-3 bg-slate-200/40 p-3 rounded-2xl min-w-[260px] max-w-[260px] snap-start border"><h2 class="font-bold text-center py-1.5 rounded-xl bg-emerald-600 text-white text-xs shadow-sm">Interactive Games</h2><div id="container-plot" class="flex flex-col gap-3 overflow-y-auto pb-10 border-0"></div></div>
+        <div id="col-vocab" class="flex flex-col gap-3 bg-slate-200/40 p-3 rounded-2xl min-w-[260px] max-w-[260px] snap-start border"><h2 class="font-bold text-center py-1.5 rounded-xl bg-amber-600 text-white text-xs shadow-sm">สรุปผลการนำสื่อไปใช้</h2><div id="container-vocab" class="flex flex-col gap-3 overflow-y-auto pb-10 border-0"></div></div>
+      </main>
+    </div>
+
+    <!-- View 2: Submit Work -->
+    <div id="view-submit" class="hidden p-6 overflow-y-auto h-full w-full bg-white/40">
+      <div class="max-w-2xl mx-auto grid grid-cols-1 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4"><i data-lucide="send" class="text-indigo-500"></i> บันทึกข้อมูลและส่งสื่อ ผลงาน Easy Media</h2>
+          
+          <form id="uploadForm" class="flex flex-col gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อ-สกุล  / ชิ้นงาน</label>
+              <input type="text" id="mediaTitle" required class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500" placeholder="เช่น เด็กชายมานะ รักเรียน">
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">ส่วนเนื้อหา (PART)</label>
+                <select id="mediaPart" required class="w-full px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="" disabled selected>-- เลือกส่วน PART --</option>
+                  <option value="PART1">PART 1</option><option value="PART2">PART 2</option><option value="PART3">PART 3</option><option value="PART4">PART 4</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">หมวดหมู่ภาระงาน</label>
+                <select id="mediaCategory" required class="w-full px-4 py-2 border rounded-xl bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="" disabled selected>-- เลือกประเภทงาน --</option>
+                  <option value="แผนการสอน รูปแบบ BAL">แผนการสอน รูปแบบ BAL</option>
+                  <option value="VDO Clip & สื่อการสอน">VDO Clip & สื่อการสอน</option>
+                  <option value="Interactive Games">Interactive Games</option>
+                  <option value="สรุปผลการนำสื่อไปใช้">สรุปผลการนำสื่อไปใช้</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">แนบลิงก์ผลงาน (ถ้ามี)</label>
+              <input type="url" id="mediaLink" class="w-full px-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="วางลิงก์ เช่น YouTube, Canva, หรือ Google Drive ที่นี่">
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">หรือ อัปโหลดไฟล์ (รองรับไฟล์ขนาดใหญ่สูงสุด 5GB)</label>
+              <input type="file" id="mediaFile" class="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 cursor-pointer">
+              
+              <!-- เพิ่ม Progress Bar แสดงสถานะอัปโหลด -->
+              <div id="progressContainer" class="hidden mt-3 w-full bg-slate-100 rounded-full h-2.5">
+                <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+              <p id="progressText" class="hidden text-xs text-indigo-600 mt-1 font-medium text-center">กำลังเตรียมการอัปโหลด...</p>
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 shadow-sm flex justify-center items-center gap-2 transition-all"><i data-lucide="check-circle" class="w-5 h-5"></i> ส่งข้อมูลเข้าคลังระบบ</button>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- View 3: Overview -->
+    <div id="view-overview" class="hidden p-6 overflow-y-auto h-full w-full"><div class="max-w-4xl mx-auto"><h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="bar-chart-3" class="text-indigo-500"></i> แผงสถิติภาพรวมข้อมูลชิ้นงานสะสม</h2><div id="overview-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div></div></div>
+
+    <!-- View 4: Grading -->
+    <div id="view-grading" class="hidden p-6 overflow-y-auto h-full w-full">
+      <div class="max-w-5xl mx-auto flex flex-col h-full">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2"><i data-lucide="clipboard-check" class="text-indigo-600"></i> แผงควบคุมระบบตรวจงาน</h2>
+          <button id="lockBtn" onclick="logoutTeacher()" class="hidden text-xs bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100 hover:bg-red-100 transition-colors">ออกจากโหมดผู้ตรวจ</button>
+        </div>
+        <div id="login-box" class="bg-white p-6 rounded-2xl shadow-sm border max-w-sm mx-auto w-full mt-10"><h3 class="font-bold text-slate-700 mb-3 text-sm flex items-center gap-1.5"><i data-lucide="key-round" class="text-amber-500"></i> ยืนยันสิทธิ์ความปลอดภัยแอดมิน</h3><form id="loginForm" class="flex flex-col gap-3"><input type="text" id="usernameInput" placeholder="USER" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"><input type="password" id="passwordInput" placeholder="PASSWORD" required class="w-full px-3 py-2 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500"><button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-sm transition-all shadow-md">เข้าสู่ระบบตรวจประเมินผล</button></form></div>
+        <div id="grading-table-container" class="hidden bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col"><div class="overflow-x-auto"><table class="w-full text-left border-collapse text-xs"><thead class="bg-slate-50 text-slate-600 sticky top-0 border-b border-slate-200 shadow-sm"><tr><th class="py-3 px-4 font-semibold">วัน-เวลา</th><th class="py-3 px-4 font-semibold">ชื่อ / ชิ้นงาน</th><th class="py-3 px-4 font-semibold">PART</th><th class="py-3 px-4 font-semibold">หมวดหมู่ภาระงาน</th><th class="py-3 px-4 font-semibold text-center">หลักฐาน</th><th class="py-3 px-4 font-semibold text-center w-28">เวลาส่ง</th><th class="py-3 px-4 font-semibold text-center w-36">ให้คะแนน (เต็ม 10)</th></tr></thead><tbody id="grading-table-body" class="text-slate-700 divide-y divide-slate-100"></tbody></table></div></div>
+      </div>
+    </div>
+
+    <!-- View 5: Summary -->
+    <div id="view-summary" class="hidden p-6 overflow-y-auto h-full w-full"><div class="max-w-5xl mx-auto"><h2 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><i data-lucide="medal" class="text-indigo-500"></i> รายงานสรุปรวบรวมผลคะแนนดิบรายบุคคล (เรียงตามอักษรชื่อ)</h2><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="w-full text-left border-collapse text-xs"><thead class="bg-slate-50 text-slate-600 border-b"><tr><th class="py-3 px-4 font-semibold">ชื่อ-สกุล ครู / ผู้ส่งผลงาน</th><th class="py-3 px-4 font-semibold text-center">ชิ้นงานรวม</th><th class="py-3 px-4 font-semibold text-center text-emerald-600">ตรงเวลา ✅</th><th class="py-3 px-4 font-semibold text-center text-amber-600">ส่งล่าช้า ⏳</th><th class="py-3 px-4 font-semibold text-center text-red-600">ยังไม่ส่ง ❌</th><th class="py-3 px-4 font-semibold text-center text-indigo-600 font-bold">คะแนนรวมสะสม</th></tr></thead><tbody id="summary-table-body" class="text-slate-700 divide-y divide-slate-100"></tbody></table></div></div></div>
+
+  </div>
+
+  <script>lucide.createIcons();</script>
+  
+  <script>
+    let dbData = []; 
+    let isTeacher = false; 
+    let currentSelectedPart = 'PART1';
+    let currentSelectedCategory = 'ALL';
+
+    const categoryMapping = {
+      "แผนการสอน รูปแบบ BAL": "container-agreement",
+      "VDO Clip & สื่อการสอน": "container-prediction",
+      "Interactive Games": "container-plot",
+      "สรุปผลการนำสื่อไปใช้": "container-vocab",
+    };
+
+    function getDriveThumbnail(url) {
+      if(!url || url === "-") return "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&q=80";
+      let fileId = "";
+      if (url.includes("id=")) { fileId = url.split("id=")[1].split("&")[0]; } 
+      else if (url.includes("/d/")) { fileId = url.split("/d/")[1].split("/")[0]; }
+      if(fileId) return "https://drive.google.com/thumbnail?id=" + fileId + "&sz=w600";
+      return "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&q=80"; 
+    }
+
+    function changeMenu(menuType) {
+      const menus = ['board', 'submit', 'overview', 'grading', 'summary'];
+      menus.forEach(m => {
+        document.getElementById(`view-${m}`).classList.add('hidden');
+        document.getElementById(`menu-${m}`).className = "w-full text-left px-4 py-3 text-slate-600 rounded-xl flex items-center gap-2.5 text-sm transition-all hover:bg-slate-50";
+      });
+      document.getElementById(`view-${menuType}`).classList.remove('hidden');
+      document.getElementById(`menu-${menuType}`).className = "nav-active w-full text-left px-4 py-3 rounded-xl flex items-center gap-2.5 text-sm transition-all shadow-sm";
+      
+      if(menuType === 'board') switchPart(currentSelectedPart);
+      if(menuType === 'grading' && isTeacher) renderGradingTable();
+      if(menuType === 'overview') renderOverviewDashboard();
+      if(menuType === 'summary') renderSummaryTable();
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if(document.getElementById('usernameInput').value === "Easy Media" && document.getElementById('passwordInput').value === "61010049") {
+        isTeacher = true;
+        document.getElementById('login-box').classList.add('hidden');
+        document.getElementById('lockBtn').classList.remove('hidden');
+        document.getElementById('grading-table-container').classList.remove('hidden');
+        renderGradingTable();
+      } else { Swal.fire('เกิดข้อผิดพลาด', 'รหัสผ่านไม่ถูกต้องสำหรับโหมดแอดมิน!', 'error'); }
+    });
+
+    function logoutTeacher() {
+      isTeacher = false;
+      document.getElementById('login-box').classList.remove('hidden');
+      document.getElementById('lockBtn').classList.add('hidden');
+      document.getElementById('grading-table-container').classList.add('hidden');
+      changeMenu('board');
+    }
+
+    function loadDataFromServer() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(function(data) {
+          dbData = data;
+          switchPart(currentSelectedPart);
+        }).readData();
+      } else {
+        dbData = [];
+        switchPart(currentSelectedPart);
+      }
+    }
+
+    function filterCategory(catName) {
+      currentSelectedCategory = catName;
+      document.getElementById('cat-ALL').className = "px-3 py-1 rounded-lg text-xs font-medium bg-white text-slate-600 whitespace-nowrap";
+      
+      const catIds = {
+        "แผนการสอน รูปแบบ BAL": "cat-agreement",
+        "VDO Clip & สื่อการสอน": "cat-prediction",
+        "Interactive Games": "cat-plot",
+        "สรุปผลการนำสื่อไปใช้": "cat-vocab"
+      };
+      
+      Object.values(catIds).forEach(id => {
+        document.getElementById(id).className = "px-3 py-1 rounded-lg text-xs font-medium bg-white text-slate-600 whitespace-nowrap";
+      });
+      
+      if(catName === 'ALL') document.getElementById('cat-ALL').className = "cat-active px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap";
+      else document.getElementById(catIds[catName]).className = "cat-active px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap";
+
+      const boardCanvas = document.getElementById('board-canvas');
+      if (catName === 'ALL') {
+        boardCanvas.className = "w-full px-6 pb-6 pt-3 flex overflow-x-auto gap-5 items-start padlet-board flex-grow h-full snap-x";
+        Object.keys(categoryMapping).forEach(key => {
+          const col = document.getElementById(categoryMapping[key].replace('container-', 'col-'));
+          if (col) { col.style.display = 'flex'; col.className = "flex flex-col gap-3 bg-slate-200/40 p-3 rounded-2xl min-w-[260px] max-w-[260px] snap-start border"; }
+          document.getElementById(categoryMapping[key]).className = "flex flex-col gap-3 overflow-y-auto pb-10";
+        });
+      } else {
+        boardCanvas.className = "w-full px-6 pb-6 pt-3 flex flex-col overflow-y-auto flex-grow h-full";
+        Object.keys(categoryMapping).forEach(key => {
+          const col = document.getElementById(categoryMapping[key].replace('container-', 'col-'));
+          if (col) {
+            if (key === catName) {
+              col.style.display = 'flex';
+              col.className = "flex flex-col gap-3 bg-slate-200/30 p-4 rounded-2xl w-full h-full border";
+              document.getElementById(categoryMapping[key]).className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 pb-10";
+            } else { col.style.display = 'none'; }
+          }
+        });
+      }
+      switchPart(currentSelectedPart);
+    }
+
+    function switchPart(partName) {
+      currentSelectedPart = partName;
+      document.querySelectorAll('[id^="tab-"]').forEach(btn => btn.className = "py-1.5 px-4 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200");
+      document.getElementById(`tab-${partName}`).className = "tab-active py-1.5 px-4 rounded-lg text-xs font-bold shadow-sm";
+
+      Object.values(categoryMapping).forEach(id => document.getElementById(id).innerHTML = '');
+
+      let filtered = dbData.filter(item => item.part === partName && (currentSelectedCategory === 'ALL' || item.category === currentSelectedCategory));
+      filtered.sort((a, b) => a.title.localeCompare(b.title, 'th'));
+
+      if(filtered.length === 0) {
+        if(currentSelectedCategory === 'ALL') {
+          Object.values(categoryMapping).forEach(id => {
+            document.getElementById(id).innerHTML = `<div class="text-[10px] text-center text-slate-400 py-6 border border-dashed rounded-xl bg-white/30">ยังไม่มีชิ้นงาน</div>`;
+          });
+        } else {
+          document.getElementById(categoryMapping[currentSelectedCategory]).innerHTML = `<div class="col-span-full text-center py-12 text-xs font-medium text-slate-400 border border-dashed rounded-xl bg-white/40">ในหมวดหมู่นี้ยังไม่มีข้อมูลชิ้นงานส่งเข้ามาในระบบ</div>`;
+        }
+      } else {
+        filtered.forEach(item => {
+          const containerId = categoryMapping[item.category];
+          if (containerId && document.getElementById(containerId)) {
+            let scoreTag = item.score === "รอตรวจ" 
+              ? `<span class="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded font-bold border border-amber-200">รอตรวจ</span>`
+              : `<span class="bg-emerald-100 text-emerald-700 text-[9px] px-2 py-0.5 rounded font-bold border border-emerald-200">คะแนน: ${item.score}/10</span>`;
+
+            let rawUrl = item.fileUrl;
+            let displayUrl = rawUrl;
+            if(rawUrl && rawUrl.includes("(แนบลิงก์:")) { displayUrl = rawUrl.split(" \n")[0]; } 
+            else if (rawUrl && !rawUrl.includes("http")) { displayUrl = "#"; }
+
+            let cardHtml = `
+              <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group hover:shadow-md transition-all h-full">
+                <div class="w-full h-32 bg-slate-100 overflow-hidden relative border-b">
+                  <img src="${getDriveThumbnail(displayUrl)}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-all duration-300" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=400&q=80'">
+                </div>
+                <div class="p-3 flex flex-col gap-1.5 flex-grow justify-between">
+                  <div>
+                    <h3 class="text-xs font-bold text-slate-700 leading-snug break-words">${item.title}</h3>
+                    <div class="flex items-center justify-between mt-2">
+                      <span class="text-[9px] text-slate-400">${item.timestamp.split(" ")[0]}</span>
+                      ${scoreTag}
+                    </div>
+                  </div>
+                  <a href="${displayUrl}" target="_blank" class="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-1.5 rounded-lg font-medium text-center border border-indigo-100 transition-colors mt-2">เปิดดูงานต้นฉบับ</a>
+                </div>
+              </div>`;
+            document.getElementById(containerId).insertAdjacentHTML('beforeend', cardHtml);
+          }
+        });
+      }
+      lucide.createIcons();
+    }
+
+    function renderOverviewDashboard() {
+      const container = document.getElementById('overview-container');
+      container.innerHTML = '';
+      const parts = ['PART1', 'PART2', 'PART3', 'PART4'];
+      parts.forEach(p => {
+        let partWorks = dbData.filter(item => item.part === p);
+        let onTimeCount = partWorks.filter(i => i.status === "ส่งตรงเวลา").length;
+        let lateCount = partWorks.filter(i => i.status === "ส่งล่าช้า").length;
+        let total = partWorks.length;
+        let blockHtml = `
+          <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h3 class="font-bold text-indigo-700 text-sm mb-3 flex items-center justify-between"><span>สถิติในภาพรวม ${p.replace('PART','PART ')}</span> <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">ส่งแล้ว ${total} ชิ้น</span></h3>
+            <div class="flex flex-col gap-2 text-xs">
+              <div><div class="flex justify-between mb-1 text-[11px] text-slate-500"><span>ส่งตรงเวลา</span><span>${onTimeCount} งาน</span></div><div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-emerald-500 h-full" style="width: ${total > 0 ? (onTimeCount/total)*100 : 0}%"></div></div></div>
+              <div><div class="flex justify-between mb-1 text-[11px] text-slate-500"><span>ส่งล่าช้า</span><span>${lateCount} งาน</span></div><div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div class="bg-amber-400 h-full" style="width: ${total > 0 ? (lateCount/total)*100 : 0}%"></div></div></div>
+            </div>
+          </div>`;
+        container.insertAdjacentHTML('beforeend', blockHtml);
+      });
+    }
+
+    function renderGradingTable() {
+      const tbody = document.getElementById('grading-table-body');
+      tbody.innerHTML = '';
+      if(dbData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูลชิ้นงาน</td></tr>';
+        return;
+      }
+      dbData.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b hover:bg-slate-50 transition-colors";
+        
+        let rawUrl = item.fileUrl;
+        let displayUrl = rawUrl;
+        if(rawUrl && rawUrl.includes("(แนบลิงก์:")) { displayUrl = rawUrl.split(" \n")[0]; } 
+        else if (rawUrl && !rawUrl.includes("http")) { displayUrl = "#"; }
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-4 text-slate-400 text-[11px]">${item.timestamp}</td>
+          <td class="py-2.5 px-4 font-semibold text-slate-700">${item.title}</td>
+          <td class="py-2.5 px-4 font-medium text-slate-500">${item.part}</td>
+          <td class="py-2.5 px-4 text-slate-600">${item.category}</td>
+          <td class="py-2.5 px-4 text-center"><a href="${displayUrl}" target="_blank" class="text-indigo-500 bg-indigo-50 p-1.5 rounded-lg border border-indigo-100 inline-block" title="${rawUrl}"><i data-lucide="eye" class="w-3.5 h-3.5"></i></a></td>
+          <td class="py-2.5 px-4 text-center">
+            <select id="statusSelect_${item.rowId}" class="px-2 py-1 border rounded-lg bg-white font-medium text-slate-600 text-xs outline-none">
+              <option value="ส่งตรงเวลา" ${item.status === 'ส่งตรงเวลา' ? 'selected' : ''}>ตรงเวลา</option>
+              <option value="ส่งล่าช้า" ${item.status === 'ส่งล่าช้า' ? 'selected' : ''}>ล่าช้า</option>
+              <option value="ไม่ส่ง" ${item.status === 'ไม่ส่ง' ? 'selected' : ''}>ไม่ส่ง</option>
+            </select>
+          </td>
+          <td class="py-2.5 px-4 flex items-center justify-center gap-2">
+            <input type="number" min="0" max="10" id="scoreInput_${item.rowId}" value="${item.score !== 'รอตรวจ' ? item.score : ''}" placeholder="0-10" class="w-12 px-1.5 py-1 text-center border rounded-lg font-bold text-indigo-600">
+            <button id="saveBtn_${item.rowId}" onclick="submitScore('${item.rowId}')" class="bg-emerald-500 text-white p-1.5 rounded-lg shadow-sm"><i data-lucide="save" class="w-3.5 h-3.5"></i></button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function renderSummaryTable() {
+      const tbody = document.getElementById('summary-table-body');
+      tbody.innerHTML = '';
+      let studentGroup = {};
+      dbData.forEach(item => {
+        if(!studentGroup[item.title]) studentGroup[item.title] = { name: item.title, totalWorks: 0, onTime: 0, late: 0, notSent: 0, totalScore: 0 };
+        let std = studentGroup[item.title]; std.totalWorks++;
+        if(item.status === "ส่งตรงเวลา") std.onTime++; if(item.status === "ส่งล่าช้า") std.late++; if(item.status === "ไม่ส่ง") std.notSent++;
+        if(!isNaN(parseFloat(item.score))) std.totalScore += parseFloat(item.score);
+      });
+      let studentsArray = Object.values(studentGroup);
+      studentsArray.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+      if(studentsArray.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูล</td></tr>'; return; }
+      studentsArray.forEach(std => {
+        tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-50"><td class="py-3 px-4 font-semibold text-slate-700">${std.name}</td><td class="py-3 px-4 text-center">${std.totalWorks} ชิ้น</td><td class="py-3 px-4 text-center text-emerald-600 font-semibold">${std.onTime}</td><td class="py-3 px-4 text-center text-amber-500 font-semibold">${std.late}</td><td class="py-3 px-4 text-center text-red-500 font-semibold">${std.notSent}</td><td class="py-3 px-4 text-center text-indigo-600 font-bold text-sm">${std.totalScore} คะแนน</td></tr>`);
+      });
+    }
+
+    function submitScore(rowId) {
+      const scoreInput = document.getElementById(`scoreInput_${rowId}`);
+      const statusSelect = document.getElementById(`statusSelect_${rowId}`);
+      if(isNaN(parseFloat(scoreInput.value)) || parseFloat(scoreInput.value) < 0 || parseFloat(scoreInput.value) > 10) {
+        Swal.fire('ข้อผิดพลาด', 'กรุณากรอกคะแนนตั้งแต่ 0 - 10', 'warning');
+        return;
+      }
+      const btn = document.getElementById(`saveBtn_${rowId}`);
+      btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-3.5 h-3.5"></i>`;
+      lucide.createIcons();
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if(res.status === "success") { 
+            btn.className = "bg-blue-500 text-white p-1.5 rounded-lg shadow-sm"; 
+            btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i>`; 
+            lucide.createIcons();
+            loadDataFromServer(); 
+          } else {
+            Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+            btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i>`;
+            lucide.createIcons();
+          }
+        })
+        .processGrade({ rowId: rowId, score: parseFloat(scoreInput.value), status: statusSelect.value });
+    }
+
+    // ==========================================
+    // ส่วนควบคุมการอัปโหลดไฟล์ขนาดใหญ่ (สูงสุด 5GB)
+    // ==========================================
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('mediaFile').files[0];
+      const linkInput = document.getElementById('mediaLink').value.trim();
+      const title = document.getElementById('mediaTitle').value;
+      const part = document.getElementById('mediaPart').value;
+      const category = document.getElementById('mediaCategory').value;
+      
+      if (!fileInput && !linkInput) {
+        Swal.fire('ข้อมูลไม่ครบถ้วน', 'กรุณาอัปโหลดไฟล์ หรือ แนบลิงก์ผลงาน อย่างใดอย่างหนึ่งครับ', 'warning');
+        return;
+      }
+
+      // ดักจับขนาดไฟล์ 5GB (5368709120 bytes)
+      if (fileInput) {
+        const maxSizeGB = 5;
+        const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
+        if (fileInput.size > maxSizeBytes) {
+          Swal.fire('ไฟล์มีขนาดใหญ่เกินไป', `ระบบรองรับไฟล์ไม่เกิน ${maxSizeGB} GB<br>ไฟล์ของคุณขนาด ${(fileInput.size / (1024*1024*1024)).toFixed(2)} GB`, 'error');
+          document.getElementById('mediaFile').value = ''; 
+          return; 
+        }
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> กำลังดำเนินการ...';
+      btn.disabled = true; 
+      lucide.createIcons();
+      
+      const pContainer = document.getElementById('progressContainer');
+      const pBar = document.getElementById('progressBar');
+      const pText = document.getElementById('progressText');
+
+      try {
+        let finalLinkUrl = linkInput || "-";
+
+        // กรณีที่มีไฟล์ ต้องทำการ Upload เข้า Google Drive โดยตรง
+        if (fileInput) {
+          pContainer.classList.remove('hidden');
+          pText.classList.remove('hidden');
+          
+          // 1. ขอรหัสโฟลเดอร์ปลายทางจาก .gs
+          pText.innerText = 'กำลังเตรียมพื้นที่จัดเก็บ...';
+          const folderId = await new Promise((resolve, reject) => {
+            google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getTargetFolderId(part, category);
+          });
+
+          // 2. ขอ Token เพื่อใช้อัปโหลด
+          pText.innerText = 'กำลังเชื่อมต่อเซิร์ฟเวอร์...';
+          const accessToken = await new Promise((resolve, reject) => {
+            google.script.run.withSuccessHandler(resolve).withFailureHandler(reject).getOAuthToken();
+          });
+
+          // 3. เริ่มต้นอัปโหลดแบบ Resumable (รองรับไฟล์ใหญ่)
+          pText.innerText = 'กำลังเริ่มอัปโหลด... 0%';
+          const metadata = {
+            name: fileInput.name,
+            mimeType: fileInput.type || 'application/octet-stream',
+            parents: [folderId]
+          };
+
+          const initRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + accessToken,
+              'Content-Type': 'application/json',
+              'X-Upload-Content-Length': fileInput.size,
+              'X-Upload-Content-Type': fileInput.type
+            },
+            body: JSON.stringify(metadata)
+          });
+
+          if (!initRes.ok) throw new Error("ไม่สามารถเริ่มต้นการอัปโหลดได้");
+          const locationUrl = initRes.headers.get('Location');
+
+          // อัปโหลดไฟล์แบบก้อน (Chunk)
+          const chunkSize = 5 * 1024 * 1024; // 5MB ต่อครั้ง
+          let start = 0;
+          
+          while (start < fileInput.size) {
+            const end = Math.min(start + chunkSize, fileInput.size);
+            const chunk = fileInput.slice(start, end);
+            
+            const uploadRes = await fetch(locationUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Range': `bytes ${start}-${end - 1}/${fileInput.size}`
+              },
+              body: chunk
+            });
+
+            start = end;
+            const percent = Math.round((start / fileInput.size) * 100);
+            pBar.style.width = percent + '%';
+            pText.innerText = `กำลังอัปโหลด... ${percent}%`;
+
+            if (uploadRes.status === 200 || uploadRes.status === 201) {
+              const fileData = await uploadRes.json();
+              
+              // เมื่อเสร็จสิ้น ได้ URL ไฟล์มา
+              let uploadedUrl = 'https://drive.google.com/file/d/' + fileData.id + '/view';
+              
+              if (linkInput && linkInput !== "") {
+                finalLinkUrl = uploadedUrl + " \n(แนบลิงก์: " + linkInput + ")";
+              } else {
+                finalLinkUrl = uploadedUrl;
+              }
+              break; // เสร็จสิ้น
+            }
+          }
+        }
+
+        // 4. บันทึกข้อมูลลง Google Sheet
+        pText.innerText = 'กำลังบันทึกข้อมูลเข้าสู่ระบบ...';
+        const payload = { title, part, category, finalLinkUrl };
+        
+        await new Promise((resolve, reject) => {
+          google.script.run
+            .withSuccessHandler(res => {
+              if (res.status === 'success') resolve();
+              else reject(new Error(res.message));
+            })
+            .withFailureHandler(reject)
+            .saveRecord(payload);
+        });
+
+        // 5. จัดการเมื่อเสร็จสิ้น
+        Swal.fire('สำเร็จ!', 'ส่งงานเข้าสู่ระบบเรียบร้อยแล้ว', 'success');
+        document.getElementById('uploadForm').reset();
+        pContainer.classList.add('hidden');
+        pText.classList.add('hidden');
+        pBar.style.width = '0%';
+        loadDataFromServer();
+        changeMenu('board');
+
+      } catch (error) {
+        Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+      } finally {
+        btn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i> ส่งข้อมูลเข้าคลังระบบ'; 
+        btn.disabled = false; 
+        lucide.createIcons();
+      }
+    });
+
+    loadDataFromServer();
+  </script>
+ </body>
+</html>
